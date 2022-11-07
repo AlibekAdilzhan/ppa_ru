@@ -10,7 +10,10 @@ class Point:
             return self.y
 
 
-point_1 = Point(5, 10)
+x = int(input())
+y = int(input())
+
+point_1 = Point(x, y)
 a = input() # x
 
 while a != "x" and a != "y":
