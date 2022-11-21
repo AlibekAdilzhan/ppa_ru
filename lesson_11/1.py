@@ -1,7 +1,15 @@
 import pygame
  
 pygame.init()
- 
+
+class Coin:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.rect = pygame.Rect(x, y, block_size // 2, block_size // 2)
+        self.image = coin_image
+
+
 fps = 60
 clock = pygame.time.Clock()
  
@@ -17,14 +25,17 @@ enemy = pygame.image.load("stay_right.png")
 enemy = pygame.transform.scale(enemy, (block_size, block_size))
 block = pygame.image.load("mario_block.png")
 block = pygame.transform.scale(block, (block_size, block_size))
+coin_image = pygame.image.load("coin1.png")
+coin_image = pygame.transform.scale(coin_image, (block_size // 2, block_size // 2))
+
 
 game_map = [
     ".................................................",
     ".................................................",
     ".................................................",
-    ".................................................",
-    ".................................................",
-    "...bbbbb..........................................",
+    "...................$.............................",
+    "....$..............$.............................",
+    "..$bbbbb$.....$..$.$$..$....$$$$...................",
     "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 ]
 
@@ -44,15 +55,22 @@ g = 2
 can_jump = False
 can_jump_enemy = False
 
+camera_x = 0 # peremennaya chtoby menyat' kameru
+
 hero_rect = pygame.Rect(hero_x, hero_y, block_size, block_size)
 enemy_rect = pygame.Rect(enemy_x, enemy_y, block_size, block_size)
 
 rects = []
+coins = []
 for i in range(len(game_map)):
     for j in range(len(game_map[i])):
         if game_map[i][j] == "b":
             rect = pygame.Rect(j * block_size, i * block_size, block_size, block_size)
             rects.append(rect)
+        if game_map[i][j] == "$":
+            coin = Coin(j * block_size, i * block_size)
+            coins.append(coin)
+
 
 run = True
 # Game loop.
@@ -86,10 +104,10 @@ while run:
         enemy_y = 600
         v_speed_enemy = 0
         can_jump_enemy = True
-    if hero_x >= width:
-        hero_x = -block_size
-    elif hero_x < -block_size:
-        hero_x = width
+    # if hero_x >= width:
+    #     hero_x = -block_size
+    # elif hero_x < -block_size:
+    #     hero_x = width
     hero_rect.x = hero_x
     hero_rect.y = hero_y
     enemy_rect.x = enemy_x
@@ -107,15 +125,18 @@ while run:
             enemy_y = rect.y - block_size
             v_speed_enemy = 0
             can_jump_enemy = True
-    
-    # if hero_rect.colliderect(enemy_rect) == True:
-    #     run = False
+    if hero_x - camera_x >= 0.5 * width: # esli igrok dohodit do poloviny shiriny ekrana, to kamera dvigaetsya
+        camera_x = camera_x + h_speed
+    elif hero_x - camera_x <= 0.3 * width: # to je samoe (pochti)
+        camera_x = camera_x - h_speed
     for i in range(len(game_map)):
         for j in range(len(game_map[i])):
             if game_map[i][j] == "b":
-                screen.blit(block, (j * block_size, i * block_size))
-    screen.blit(snowman, (hero_x, hero_y))
-    screen.blit(enemy, (enemy_x, enemy_y))
+                screen.blit(block, (j * block_size - camera_x, i * block_size))
+    for coin in coins:
+        screen.blit(coin.image, (coin.x - camera_x, coin.y))
+    screen.blit(snowman, (hero_x - camera_x, hero_y))
+    screen.blit(enemy, (enemy_x - camera_x, enemy_y))
     pygame.display.flip()
     clock.tick(fps)
          
