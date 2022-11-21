@@ -1,6 +1,14 @@
 import pygame
  
 pygame.init()
+pygame.font.init()
+
+# font object..................................
+def create_font(t, c=(255,255,0)):
+    font = pygame.font.SysFont("Arial", 36, bold=False, italic=False)
+    text = font.render(t, True, c)
+    return text
+# Text to be rendered with create_font    
 
 class Coin:
     def __init__(self, x, y):
@@ -54,6 +62,7 @@ v_speed_enemy = 0
 g = 2
 can_jump = False
 can_jump_enemy = False
+coins_counter = 0
 
 camera_x = 0 # peremennaya chtoby menyat' kameru
 
@@ -134,9 +143,16 @@ while run:
             if game_map[i][j] == "b":
                 screen.blit(block, (j * block_size - camera_x, i * block_size))
     for coin in coins:
-        screen.blit(coin.image, (coin.x - camera_x, coin.y))
+        screen.blit(coin.image, (coin.x - camera_x + block_size // 4, coin.y + block_size // 4))
+        if hero_rect.colliderect(coin):
+            coins_counter += 1
+            coins.remove(coin)
+            del coin
+    coins_amount = create_font("COINS:" + str(coins_counter))
     screen.blit(snowman, (hero_x - camera_x, hero_y))
     screen.blit(enemy, (enemy_x - camera_x, enemy_y))
+    screen.blit(coins_amount, (60, 10))
+    screen.blit(coin_image, (10, 10))
     pygame.display.flip()
     clock.tick(fps)
          
