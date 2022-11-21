@@ -1,15 +1,19 @@
 import pygame
+import time
  
 pygame.init()
 pygame.font.init()
+pygame.mixer.init()
 
 # font object..................................
 def create_font(t, c=(255,255,0)):
     font = pygame.font.SysFont("Arial", 36, bold=False, italic=False)
     text = font.render(t, True, c)
     return text
-# Text to be rendered with create_font    
 
+music = pygame.mixer.music.load("music_1.ogg")
+sound_coin = pygame.mixer.Sound("sound_coin.wav")
+pygame.mixer.music.play(-1)
 class Coin:
     def __init__(self, x, y):
         self.x = x
@@ -35,15 +39,17 @@ block = pygame.image.load("mario_block.png")
 block = pygame.transform.scale(block, (block_size, block_size))
 coin_image = pygame.image.load("coin1.png")
 coin_image = pygame.transform.scale(coin_image, (block_size // 2, block_size // 2))
+batoot_image = pygame.image.load("trampoline.png")
+batoot_image = pygame.transform.scale(batoot_image, (block_size, block_size // 3))
 
 
 game_map = [
     ".................................................",
     ".................................................",
-    ".................................................",
-    "...................$.............................",
-    "....$..............$.............................",
-    "..$bbbbb$.....$..$.$$..$....$$$$...................",
+    "................................................",
+    "........b..........$.............................",
+    "....$..ybb.........$.............................",
+    "..$bbbbbbbb...$..$.$$..$....$$$$...................",
     "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 ]
 
@@ -71,6 +77,7 @@ enemy_rect = pygame.Rect(enemy_x, enemy_y, block_size, block_size)
 
 rects = []
 coins = []
+batoots = []
 for i in range(len(game_map)):
     for j in range(len(game_map[i])):
         if game_map[i][j] == "b":
@@ -79,7 +86,11 @@ for i in range(len(game_map)):
         if game_map[i][j] == "$":
             coin = Coin(j * block_size, i * block_size)
             coins.append(coin)
+        if game_map[i][j] == "y":
+            batoot_rect = pygame.Rect(j * block_size, i * block_size + 2 * block_size // 3, block_size, block_size // 3)
+            batoots.append(batoot_rect)
 
+start_batoot = time.time()
 
 run = True
 # Game loop.
@@ -142,12 +153,20 @@ while run:
         for j in range(len(game_map[i])):
             if game_map[i][j] == "b":
                 screen.blit(block, (j * block_size - camera_x, i * block_size))
+            if game_map[i][j] == "y":
+                screen.blit(batoot_image, (j * block_size - camera_x, i * block_size + 2 * block_size // 3))
     for coin in coins:
         screen.blit(coin.image, (coin.x - camera_x + block_size // 4, coin.y + block_size // 4))
         if hero_rect.colliderect(coin):
             coins_counter += 1
             coins.remove(coin)
             del coin
+            pygame.mixer.Sound.play(sound_coin)
+    for batoot in batoots:
+        if hero_rect.colliderect(batoot) and time.time() - start_batoot > 0.25:
+            start_batoot = time.time()
+            v_speed = v_speed - 30
+            can_jump = False
     coins_amount = create_font("COINS:" + str(coins_counter))
     screen.blit(snowman, (hero_x - camera_x, hero_y))
     screen.blit(enemy, (enemy_x - camera_x, enemy_y))
