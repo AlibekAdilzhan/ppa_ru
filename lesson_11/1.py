@@ -22,6 +22,16 @@ class Coin:
         self.image = coin_image
 
 
+def get_pngs(path):
+    enemy_walk_pngs = []
+    for i in range(10):
+        enemy_walk = pygame.image.load(path + str(i + 1) + ".png")
+        enemy_walk = pygame.transform.scale(enemy_walk, (block_size, block_size))
+        enemy_walk_pngs.append(enemy_walk)
+    return enemy_walk_pngs
+
+
+
 fps = 60
 clock = pygame.time.Clock()
  
@@ -42,7 +52,8 @@ coin_image = pygame.transform.scale(coin_image, (block_size // 2, block_size // 
 batoot_image = pygame.image.load("trampoline.png")
 batoot_image = pygame.transform.scale(batoot_image, (block_size, block_size // 3))
 
-
+enemy_walk_left = get_pngs("enemy_assets/walk_left_")
+enemy_walk_right = get_pngs("enemy_assets/walk_rigint_")
 game_map = [
     ".................................................",
     ".................................................",
@@ -75,6 +86,8 @@ camera_x = 0 # peremennaya chtoby menyat' kameru
 hero_rect = pygame.Rect(hero_x, hero_y, block_size, block_size)
 enemy_rect = pygame.Rect(enemy_x, enemy_y, block_size, block_size)
 
+enemy_hp = 100
+
 rects = []
 coins = []
 batoots = []
@@ -91,8 +104,9 @@ for i in range(len(game_map)):
             batoots.append(batoot_rect)
 
 start_batoot = time.time()
-
+start_enemy_iter = time.time()
 run = True
+current_enemy_iter = 0
 # Game loop.
 while run:
     screen.fill((50, 200, 255))
@@ -114,8 +128,10 @@ while run:
         hero_x = hero_x - h_speed
     if hero_x > enemy_x:
         enemy_x = enemy_x + h_speed_enemy
-    else:
+        enemy = enemy_walk_right[current_enemy_iter] # 
+    elif hero_x < enemy_x:
         enemy_x = enemy_x - h_speed_enemy
+        enemy = enemy_walk_left[current_enemy_iter]
     v_speed = v_speed + g
     hero_y = hero_y + v_speed
     v_speed_enemy = v_speed_enemy + g
@@ -128,10 +144,15 @@ while run:
     #     hero_x = -block_size
     # elif hero_x < -block_size:
     #     hero_x = width
+    if time.time() - start_enemy_iter > 0.1:
+        start_enemy_iter = time.time()
+        current_enemy_iter = (current_enemy_iter + 1) % 10
     hero_rect.x = hero_x
     hero_rect.y = hero_y
     enemy_rect.x = enemy_x
     enemy_rect.y = enemy_y
+    if hero_rect.colliderect(enemy_rect) == True:
+        enemy_hp -= 0.1
     for rect in rects:
         if hero_rect.colliderect(rect) == True and abs(rect.y - hero_y) <= block_size // 2:
             hero_x = hero_old_x
@@ -167,11 +188,13 @@ while run:
             start_batoot = time.time()
             v_speed = v_speed - 30
             can_jump = False
+    pygame.draw.rect(screen, (255, 0, 0), (enemy_x - camera_x + 13, enemy_y - 5, (block_size / 2) * enemy_hp / 100, block_size // 13))
     coins_amount = create_font("COINS:" + str(coins_counter))
     screen.blit(snowman, (hero_x - camera_x, hero_y))
     screen.blit(enemy, (enemy_x - camera_x, enemy_y))
     screen.blit(coins_amount, (60, 10))
     screen.blit(coin_image, (10, 10))
+    screen.blit(enemy_walk_left[5], (40, 40))
     pygame.display.flip()
     clock.tick(fps)
          
